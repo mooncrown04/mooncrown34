@@ -47,7 +47,7 @@ class M3UStreamProvider : MainAPI() {
                     LiveSearchResponse(
                         name = finalName,
                         url = url,
-                        apiName = finalGroup,
+                        apiName = this.name,
                         type = TvType.Live,
                         posterUrl = finalLogo
                     )
@@ -62,10 +62,8 @@ class M3UStreamProvider : MainAPI() {
         val name = url.substringAfterLast("/").substringBefore(".")
         return LiveStreamLoadResponse(
             name = name,
-            dataUrl = url,
             url = url,
-            type = TvType.Live,
-            headers = null
+            type = TvType.Live
         )
     }
 
@@ -76,13 +74,14 @@ class M3UStreamProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         callback.invoke(
-            newExtractorLink {
-                this.name = this@M3UStreamProvider.name
-                this.source = this@M3UStreamProvider.name
-                this.url = data
-                this.quality = Qualities.Unknown.value
-                this.type = ExtractorLinkType.M3U8
-            }
+            ExtractorLink(
+                source = this.name,
+                name = this.name,
+                url = data,
+                referer = null,
+                quality = Qualities.Unknown.value,
+                type = ExtractorLinkType.M3U8
+            )
         )
         return true
     }
