@@ -8,10 +8,10 @@ buildscript {
         maven("https://jitpack.io") // CloudStream Gradle Plugin burada
     }
 
-    dependencies {
-        classpath("com.android.tools.build:gradle:8.1.1")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10")
+  dependencies {
+        classpath("com.android.tools.build:gradle:8.7.3")
         classpath("com.github.recloudstream:gradle:-SNAPSHOT")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0")
     }
 }
 
