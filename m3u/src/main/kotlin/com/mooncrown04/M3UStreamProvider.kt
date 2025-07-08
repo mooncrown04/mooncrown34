@@ -2,7 +2,6 @@ package com.mooncrown04
 
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
-import com.lagradost.cloudstream3.network.WebViewResolver
 import java.net.URI
 
 class M3UStreamProvider : MainAPI() {
@@ -20,16 +19,21 @@ class M3UStreamProvider : MainAPI() {
             val logo = Regex("""tvg-logo="(.*?)"""").find(line)?.groupValues?.getOrNull(1)
 
             newTvSeriesSearchResponse(title, streamUrl, TvType.Live) {
-                this.posterUrl = logo
+                posterUrl = logo
             }
         }
 
-        return HomePageResponse(listOf(HomePageList("M3U", items)))
+        return HomePageResponse(listOf(HomePageList("M3U Channels", items)))
     }
 
-    override suspend fun load(url: String): LoadResponse? {
+    override suspend fun load(url: String): LoadResponse {
         return newTvSeriesLoadResponse(name = url, url = url, type = TvType.Live) {
-            this.episodes = listOf(Episode(url))
+            episodes = listOf(
+                Episode(
+                    data = url,
+                    name = "Canlı Yayın"
+                )
+            )
         }
     }
 
@@ -41,8 +45,8 @@ class M3UStreamProvider : MainAPI() {
     ): Boolean {
         callback(
             newExtractorLink {
-                this.name = "M3U"
                 this.source = "M3U"
+                this.name = "Canlı"
                 this.url = data
                 this.referer = getRefererFromUrl(data) ?: ""
                 this.quality = Qualities.Unknown.value
