@@ -1,8 +1,0 @@
-{
-  "name": "Turkish Providers Repository | @KekikAkademi",
-  "description": "Türkçe içerikli eklenti havuzu",
-  "manifestVersion": 1,
-  "pluginLists": [
-    "https://raw.githubusercontent.com/mooncrown04/mooncrown34/builds/plugins.json"
-  ]
-}
