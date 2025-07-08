@@ -5,68 +5,66 @@ import com.lagradost.cloudstream3.utils.*
 import java.net.URI
 
 class M3UStreamProvider : MainAPI() {
-    override var mainUrl = "https://raw.githubusercontent.com/mooncrown04/m3u/refs/heads/main/birlesik.m3u"
-    override var name = "M3U"
+    override var mainUrl = "https://example.com" // Ana URL, gerektiğinde değiştirilebilir
+    override var name = "M3U Stream"
+    override val hasMainPage = false
+    override val hasQuickSearch = false
+    override val hasDownloadSupport = false
     override val supportedTypes = setOf(TvType.Live)
 
-    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val response = app.get(mainUrl).text
-        val lines = response.split("#EXTINF").drop(1)
-
-        val items = lines.mapNotNull { line ->
-            val streamUrl = line.substringAfter("\n").substringBefore("\n").trim()
-            val title = line.substringBefore("\n").substringAfter(",").trim()
-            val logo = Regex("""tvg-logo="(.*?)"""").find(line)?.groupValues?.getOrNull(1)
-
-            newTvSeriesSearchResponse(title, streamUrl, TvType.Live) {
-                posterUrl = logo
-            }
-        }
-
-        return HomePageResponse(listOf(HomePageList("M3U Channels", items)))
-    }
+    private val m3uUrl = "https://raw.githubusercontent.com/mooncrown04/mooncrown34/master/birlesik.m3u"
 
     override suspend fun load(url: String): LoadResponse {
-        return newTvSeriesLoadResponse(name = url, url = url, type = TvType.Live) {
-            this.episodes = listOf(
-                Episode(
-                    data = url,
-                    name = "Canlı Yayın"
-                )
-            )
-        }
-    }
-
-    override suspend fun loadLinks(
-        data: String,
-        isCasting: Boolean,
-        subtitleCallback: (SubtitleFile) -> Unit,
-        callback: (ExtractorLink) -> Unit
-    ): Boolean {
-        callback(
-            newExtractorLink {
-                this.source = "M3U"
-                this.name = "Canlı"
-                this.url = data
-                this.referer = getRefererFromUrl(data) ?: ""
-                this.quality = Qualities.Unknown.value
-                this.isM3u8 = true
-                this.headers = mapOf("User-Agent" to USER_AGENT)
-            }
+        return LiveStreamLoadResponse(
+            name = url,
+            url = url,
+            streamUrl = url,
+            referer = null
         )
-        return true
     }
 
-    private fun getRefererFromUrl(url: String): String? {
-        return try {
-            URI(url).host?.let { "https://$it" }
-        } catch (e: Exception) {
-            null
+    override suspend fun getMainPage(): HomePageResponse {
+        return HomePageResponse(emptyList())
+    }
+
+    override suspend fun search(query: String): List<SearchResponse> {
+        val playlist = app.get(m3uUrl).text
+        val result = mutableListOf<SearchResponse>()
+
+        val lines = playlist.lines()
+        var currentName: String? = null
+        var currentLogo: String? = null
+        var currentGroup: String? = null
+
+        for (i in lines.indices) {
+            val line = lines[i]
+            if (line.startsWith("#EXTINF")) {
+                val nameRegex = Regex(",(.*)")
+                val logoRegex = Regex("""tvg-logo="(.*?)"""")
+                val groupRegex = Regex("""group-title="(.*?)"""")
+
+                nameRegex.find(line)?.groupValues?.getOrNull(1)?.let { currentName = it }
+                logoRegex.find(line)?.groupValues?.getOrNull(1)?.let { currentLogo = it }
+                groupRegex.find(line)?.groupValues?.getOrNull(1)?.let { currentGroup = it }
+
+                val nextLine = lines.getOrNull(i + 1)
+                if (!nextLine.isNullOrBlank() && nextLine.startsWith("http")) {
+                    val streamUrl = nextLine.trim()
+                    if (currentName?.contains(query, true) == true) {
+                        result.add(
+                            LiveSearchResponse(
+                                name = currentName ?: streamUrl,
+                                url = streamUrl,
+                                apiName = this.name,
+                                logo = currentLogo,
+                                tvType = TvType.Live
+                            )
+                        )
+                    }
+                }
+            }
         }
-    }
 
-    companion object {
-        const val USER_AGENT =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+        return result
     }
 }
