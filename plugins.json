@@ -1,23 +1,15 @@
 [
-   
-    {
-        "iconUrl": "https://animeler.me/wp-content/uploads/cropped-animelerpw-48x48.png",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/maarrem/cs-Kekik",
-        "fileSize": 24103,
-        "status": 1,
-        "language": "tr",
-        "authors": [
-            "kraptor"
-        ],
-        "tvTypes": [
-            "Anime"
-        ],
-        "version": 4,
-        "internalName": "Animeler",
-        "description": "HD kalitesinde \u00fccretsiz anime izle! Animeler.me, en yeni ve pop\u00fcler anime serilerini T\u00fcrk\u00e7e altyaz\u0131l\u0131 ve dublajl\u0131 olarak sunar. Favori animelerini hemen ke\u015ffet!",
-        "url": "https://raw.githubusercontent.com//mooncrown04/mooncrown34/builds/m3u.cs3",
-        "name": "Animeler"
-    }
-   
+  {
+    "name": "M3UStream",
+    "packageName": "com.mooncrown04",
+    "versionCode": 1,
+    "versionName": "1.0",
+    "apk": "m3u.cs3",
+    "icon": "https://raw.githubusercontent.com/recloudstream/cloudstream/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+    "repo": "https://github.com/mooncrown04/mooncrown34",
+    "description": "M3U linkleri üzerinden canlı yayın sağlayıcısı.",
+    "authors": ["mooncrown04"],
+    "language": "tr",
+    "tvTypes": ["Live"]
+  }
 ]
