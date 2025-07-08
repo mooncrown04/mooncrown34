@@ -3,17 +3,9 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
-        maven("https://recloudstream.github.io/maven")
-    }
-
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id == "cloudstream-plugin") {
-                useModule("com.github.recloudstream.cloudstream:gradle:master-SNAPSHOT")
-            }
-        }
+        maven("https://jitpack.io")
     }
 }
 
-rootProject.name = "mooncrown35"
+rootProject.name = "mooncrown34"
 include(":m3u")
