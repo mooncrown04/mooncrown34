@@ -1,9 +1,11 @@
 package com.mooncrown04
 
 import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.network.LoadResponse
+import com.lagradost.cloudstream3.network.LiveStream
 import java.text.SimpleDateFormat
 import java.util.*
-import com.mooncrown04.parseM3u
+import kotlin.collections.ArrayList
 
 class M3UStreamProvider : MainAPI() {
     override var name = "M3UStream"
@@ -16,17 +18,20 @@ class M3UStreamProvider : MainAPI() {
         return diff <= 7 * 24 * 60 * 60 * 1000 // 1 hafta
     }
 
-    override suspend fun load(): LoadResponse {
-        val m3uData = app.get(mainUrl).text
-        val parsed = parseM3u(m3uData)
+    override suspend fun load(url: String): LoadResponse? {
+        val m3uUrl = url.ifBlank { mainUrl }
         val channels = ArrayList<LiveStream>()
+        val m3uData = app.get(m3uUrl).text
 
-        val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("tr", "TR"))
+        val parsed = parseM3u(m3uData)
 
         for (entry in parsed) {
             val name = entry.name ?: continue
             val url = entry.url ?: continue
+
             val addedAt = System.currentTimeMillis()
+            val dateStr = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("tr", "TR"))
+                .format(Date(addedAt))
 
             val groupRaw = entry.group ?: ""
             val sourceTag = getSourceName(url)
@@ -36,7 +41,7 @@ class M3UStreamProvider : MainAPI() {
                 if (groupRaw.isNotBlank()) "$groupRaw [$sourceTag]" else sourceTag
             }
 
-            val fullName = if (isNewTag) "$name (${dateFormat.format(Date(addedAt))})" else "$name [${dateFormat.format(Date(addedAt))}]"
+            val fullName = if (isNewTag) "$name ($dateStr)" else "$name [$dateStr]"
 
             val logo = entry.logo?.replace(",", "%2C") ?: ""
 
@@ -52,7 +57,11 @@ class M3UStreamProvider : MainAPI() {
             )
         }
 
-        return LiveStreamLoadResponse(name, mainUrl, channels)
+        return LiveStreamLoadResponse(
+            name = this.name,
+            streams = channels,
+            dataUrl = m3uUrl
+        )
     }
 
     private fun getSourceName(url: String): String {
