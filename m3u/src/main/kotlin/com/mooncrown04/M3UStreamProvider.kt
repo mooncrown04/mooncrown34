@@ -1,20 +1,19 @@
 package com.mooncrown04
 
 import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.*
-import com.lagradost.cloudstream3.api.*
+import com.lagradost.cloudstream3.utils.AppUtils
 
 class M3UStreamProvider : MainAPI() {
     override var name = "M3U"
     override var mainUrl = "https://raw.githubusercontent.com/mooncrown04/mooncrown34/master/m3u/resources/birlesik.m3u"
-    override val hasMainPage = true
+    override val hasMainPage = false
     override val supportedTypes = setOf(TvType.Live)
 
     override suspend fun load(url: String): LoadResponse {
         val response = app.get(mainUrl).text
         val lines = response.lines()
 
-        val streamList = mutableListOf<LiveStream>()
+        val episodes = ArrayList<Episode>()
 
         var currentName: String? = null
         var currentLogo: String? = null
@@ -29,22 +28,23 @@ class M3UStreamProvider : MainAPI() {
                 currentLogo = logoMatch?.groupValues?.get(1)
             } else if (line.startsWith("http")) {
                 val streamUrl = line.trim()
-                val liveStream = LiveStream(
-                    name = currentName ?: "Bilinmeyen",
-                    url = streamUrl,
-                    referer = null,
-                    icon = currentLogo
+                episodes.add(
+                    Episode(
+                        name = currentName,
+                        url = streamUrl,
+                        posterUrl = currentLogo
+                    )
                 )
-                streamList.add(liveStream)
             }
         }
 
-        return LiveStreamLoadResponse(
+        return TvSeriesLoadResponse(
             name = "M3U Yayınları",
             url = url,
-            apiName = this.name,
+            apiName = name,
             type = TvType.Live,
-            data = streamList
+            episodes = episodes,
+            posterUrl = null
         )
     }
 }
