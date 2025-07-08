@@ -1,41 +1,31 @@
-   package com.mooncrown04
+package com.mooncrown04
 
 import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.AppUtils.toSearchResult
-import java.net.URI
+import com.lagradost.cloudstream3.utils.*
 
 class M3UStreamProvider : MainAPI() {
     override var mainUrl = "https://raw.githubusercontent.com/mooncrown04/m3u/refs/heads/main/birlesik.m3u"
     override var name = "M3U"
     override val supportedTypes = setOf(TvType.Live)
 
-    override suspend fun load(url: String): LoadResponse? {
+    override suspend fun load(url: String): HomePageResponse {
         val response = app.get(url).text
-        val lines = response.split("#EXTINF")
+        val lines = response.split("#EXTINF").drop(1)
 
-        val results = lines.drop(1).mapNotNull { line ->
+        val liveList = lines.mapNotNull { line ->
             val streamUrl = line.substringAfter("\n").substringBefore("\n").trim()
             val title = line.substringBefore("\n").substringAfter(",").trim()
 
             val logo = Regex("tvg-logo=\"(.*?)\"").find(line)?.groupValues?.getOrNull(1)
-            val group = Regex("group-title=\"(.*?)\"").find(line)?.groupValues?.getOrNull(1)
+            val group = Regex("group-title=\"(.*?)\"").find(line)?.groupValues?.getOrNull(1) ?: "M3U"
 
-            LiveStreamLoadResponse(
-                name = title,
-                url = streamUrl,
-                type = TvType.Live,
-                dataUrl = streamUrl,
-                icon = logo,
-                headers = mapOf("User-Agent" to USER_AGENT),
-                quality = SearchQuality.Unknown,
-                referer = getRefererFromUrl(streamUrl)
-            )
+            newTvSeriesSearchResponse(title, streamUrl, TvType.Live) {
+                this.posterUrl = logo
+            }
         }
 
-        return LiveStreamSearchResponse(
-            name = "M3U Channels",
-            url = url,
-            results = results
+        return HomePageResponse(
+            listOf(HomePageList(name = "M3U Channels", list = liveList))
         )
     }
 
@@ -48,7 +38,7 @@ class M3UStreamProvider : MainAPI() {
         callback(
             ExtractorLink(
                 name = "M3U",
-                source = "m3u",
+                source = "M3U",
                 url = data,
                 referer = getRefererFromUrl(data),
                 quality = Qualities.Unknown.value,
@@ -61,7 +51,7 @@ class M3UStreamProvider : MainAPI() {
 
     private fun getRefererFromUrl(url: String): String? {
         return try {
-            URI(url).host?.let { "https://$it" }
+            java.net.URI(url).host?.let { "https://$it" }
         } catch (e: Exception) {
             null
         }
