@@ -1,6 +1,9 @@
 plugins {
-    id("cloudstream") version "1.0.0"
+    id("com.android.library")
+    id("kotlin-android")
 }
+
+apply(plugin = "com.lagradost.cloudstream3.gradle")
 
 cloudstream {
     language = "kotlin"
