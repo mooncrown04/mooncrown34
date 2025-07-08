@@ -8,7 +8,7 @@ import kotlin.collections.ArrayList
 
 class M3UStreamProvider : MainAPI() {
     override var name = "M3UStream"
-    override var mainUrl = "https://raw.githubusercontent.com/mooncrown04/mooncrown34/master/m3u/resources/birlesik.m3u" // 👉 burayı kendi URL’inle değiştir
+    override var mainUrl = "https://raw.githubusercontent.com/mooncrown04/m3u/refs/heads/main/birlesik.m3u" // 👉 burayı kendi URL’inle değiştir
     override var supportedTypes = setOf(TvType.Live)
 
     // 1 hafta içinde eklenenlere [YENİ] etiketi ver
