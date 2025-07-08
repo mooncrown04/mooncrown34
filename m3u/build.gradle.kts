@@ -1,9 +1,7 @@
-version = 3
-
 cloudstream {
     authors     = listOf("mooncrown04")
     language    = "tr"
-    description = "   Tadını Çıkart."
+    description = "M3U canlı TV akışlarını oynatır."
 
     /**
      * Status int as the following:
@@ -12,7 +10,7 @@ cloudstream {
      * 2: Slow
      * 3: Beta only
     **/
-    status  = 1 // will be 3 if unspecified
-    tvTypes = listOf("Movie")
-    iconUrl = "https://www.google.com/s2/favicons?domain=www.4kfilmizlesene.org&sz=%size%"
+    status  = 1
+    tvTypes = listOf("Live")
+    iconUrl = "https://www.google.com/s2/favicons?domain=example.com&sz=%size%"
 }
