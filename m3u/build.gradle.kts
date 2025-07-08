@@ -1,7 +1,7 @@
 plugins {
     kotlin("android")
     id("com.android.library")
-     id("cloudstream")
+    id("cloudstream")
 }
 
 cloudstream {
@@ -12,7 +12,7 @@ cloudstream {
 
 android {
     namespace = "com.mooncrown04"
-    compileSdkVersion(34)
+    compileSdk = 34
 
     defaultConfig {
         minSdk = 21
@@ -38,7 +38,5 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation("org.jsoup:jsoup:1.18.3")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.lagradost:cloudstream3:3.0.0") 
-
-    // Diğer bağımlılıklar
+    implementation("com.github.recloudstream.cloudstream:cloudstream3:3.3.1")
 }
