@@ -7,7 +7,7 @@ apply(plugin = "com.lagradost.cloudstream3.gradle")
 
 cloudstream {
     language = "kotlin"
-    mainClass = "com.mooncrown04.M3UStreamProvider"
+    pluginClass = "com.mooncrown04.M3UStreamProvider" // ✅ doğru alan bu
     status = 1 // 0 = Broken, 1 = Working, 2 = Beta
     description = "Türkiye için M3U canlı yayın sağlayıcısı"
     authors = listOf("mooncrown04")
