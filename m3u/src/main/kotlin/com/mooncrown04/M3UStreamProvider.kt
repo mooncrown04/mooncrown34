@@ -1,11 +1,11 @@
 package com.mooncrown04
 
 import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.network.LoadResponse
-import com.lagradost.cloudstream3.network.LiveStream
+import com.lagradost.cloudstream3.mainapi.LiveStream
+import com.lagradost.cloudstream3.mainapi.LiveStreamLoadResponse
+import com.lagradost.cloudstream3.mainapi.LoadResponse
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 class M3UStreamProvider : MainAPI() {
     override var name = "M3UStream"
@@ -27,14 +27,14 @@ class M3UStreamProvider : MainAPI() {
 
         for (entry in parsed) {
             val name = entry.name ?: continue
-            val url = entry.url ?: continue
+            val streamUrl = entry.url ?: continue
 
             val addedAt = System.currentTimeMillis()
             val dateStr = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("tr", "TR"))
                 .format(Date(addedAt))
 
             val groupRaw = entry.group ?: ""
-            val sourceTag = getSourceName(url)
+            val sourceTag = getSourceName(streamUrl)
             val isNewTag = isNew(addedAt)
 
             val groupTitle = if (isNewTag) "[YENİ] [$sourceTag]" else {
@@ -48,7 +48,7 @@ class M3UStreamProvider : MainAPI() {
             channels.add(
                 LiveStream(
                     name = fullName,
-                    url = url,
+                    url = streamUrl,
                     icon = logo,
                     referer = null,
                     headers = null,
