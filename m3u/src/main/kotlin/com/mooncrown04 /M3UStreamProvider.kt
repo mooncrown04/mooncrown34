@@ -2,6 +2,7 @@ package com.mooncrown04
 
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
+import com.lagradost.cloudstream3.extractors.*
 import org.jsoup.Jsoup
 
 class M3UStreamProvider : MainAPI() {
@@ -11,7 +12,8 @@ class M3UStreamProvider : MainAPI() {
     override var lang = "tr"
     override val hasMainPage = true
 
-    private val m3uUrl = "https://raw.githubusercontent.com/mooncrown04/m3u/refs/heads/main/birlesik.m3u"
+    private val m3uUrl =
+        "https://raw.githubusercontent.com/mooncrown04/m3u/refs/heads/main/birlesik.m3u"
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val content = app.get(m3uUrl).text
@@ -56,9 +58,10 @@ class M3UStreamProvider : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse {
+        val streamName = url.substringAfterLast("/").substringBefore(".")
         return newLiveStreamLoadResponse(
-            name = url.substringAfterLast("/").substringBefore("."),
-            url = url,
+            name = streamName,
+            dataUrl = url,
             streamUrl = url
         ) {
             posterUrl = null
@@ -74,11 +77,11 @@ class M3UStreamProvider : MainAPI() {
     ): Boolean {
         callback.invoke(
             ExtractorLink(
-                name,
-                name,
-                data,
+                source = name,
+                name = name,
+                url = data,
                 referer = null,
-                quality = Qualities.Unknown,
+                quality = Qualities.Unknown.value, // düzeltme burada
                 type = ExtractorLinkType.M3U8
             )
         )
