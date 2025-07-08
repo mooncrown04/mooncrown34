@@ -1,16 +1,16 @@
-cloudstream {
-    authors     = listOf("mooncrown04")
-    language    = "tr"
-    description = "M3U canlı TV akışlarını oynatır."
+plugins {
+    id("cloudstream") version "1.0.0"
+}
 
-    /**
-     * Status int as the following:
-     * 0: Down
-     * 1: Ok
-     * 2: Slow
-     * 3: Beta only
-    **/
-    status  = 1
-    tvTypes = listOf("Live")
-    iconUrl = "https://www.google.com/s2/favicons?domain=example.com&sz=%size%"
+cloudstream {
+    language = "kotlin"
+    mainClass = "com.mooncrown04.M3UStreamProvider"
+    status = 1 // 0 = Broken, 1 = Working, 2 = Beta
+    description = "Türkiye için M3U canlı yayın sağlayıcısı"
+    authors = listOf("mooncrown04")
+}
+
+dependencies {
+    implementation("org.jsoup:jsoup:1.16.1")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
