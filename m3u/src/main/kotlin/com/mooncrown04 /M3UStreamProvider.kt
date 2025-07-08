@@ -2,7 +2,6 @@ package com.mooncrown04
 
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
-import com.lagradost.cloudstream3.extractors.*
 import org.jsoup.Jsoup
 
 class M3UStreamProvider : MainAPI() {
@@ -12,8 +11,7 @@ class M3UStreamProvider : MainAPI() {
     override var lang = "tr"
     override val hasMainPage = true
 
-    private val m3uUrl =
-        "https://raw.githubusercontent.com/mooncrown04/m3u/refs/heads/main/birlesik.m3u"
+    private val m3uUrl = "https://raw.githubusercontent.com/mooncrown04/m3u/refs/heads/main/birlesik.m3u"
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val content = app.get(m3uUrl).text
@@ -35,10 +33,10 @@ class M3UStreamProvider : MainAPI() {
         for (i in lines.indices) {
             val line = lines[i].trim()
             if (line.startsWith("#EXTINF")) {
-                name = Regex("tvg-name=\"([^\"]+)\"").find(line)?.groupValues?.getOrNull(1)
+                name = Regex("""tvg-name="([^"]+)"""").find(line)?.groupValues?.getOrNull(1)
                     ?: line.substringAfter(",").trim()
-                logo = Regex("tvg-logo=\"([^\"]+)\"").find(line)?.groupValues?.getOrNull(1)
-                group = Regex("group-title=\"([^\"]+)\"").find(line)?.groupValues?.getOrNull(1)
+                logo = Regex("""tvg-logo="([^"]+)"""").find(line)?.groupValues?.getOrNull(1)
+                group = Regex("""group-title="([^"]+)"""").find(line)?.groupValues?.getOrNull(1)
             } else if (line.startsWith("http")) {
                 val url = line
                 val finalName = name ?: "No Name"
@@ -46,10 +44,13 @@ class M3UStreamProvider : MainAPI() {
                 val finalGroup = group ?: "M3U"
 
                 result.add(
-                    newLiveSearchResponse(finalName, url, TvType.Live, fix = false) {
-                        this.posterUrl = finalLogo
-                        this.apiName = finalGroup
-                    }
+                    LiveSearchResponse(
+                        name = finalName,
+                        url = url,
+                        apiName = finalGroup,
+                        type = TvType.Live,
+                        posterUrl = finalLogo
+                    )
                 )
             }
         }
@@ -58,15 +59,14 @@ class M3UStreamProvider : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val streamName = url.substringAfterLast("/").substringBefore(".")
-        return newLiveStreamLoadResponse(
-            name = streamName,
+        val name = url.substringAfterLast("/").substringBefore(".")
+        return LiveStreamLoadResponse(
+            name = name,
             dataUrl = url,
-            streamUrl = url
-        ) {
-            posterUrl = null
-            this.tags = listOf("M3U")
-        }
+            url = url,
+            type = TvType.Live,
+            headers = null
+        )
     }
 
     override suspend fun loadLinks(
@@ -76,14 +76,13 @@ class M3UStreamProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         callback.invoke(
-            ExtractorLink(
-                source = name,
-                name = name,
-                url = data,
-                referer = null,
-                quality = Qualities.Unknown.value, // düzeltme burada
-                type = ExtractorLinkType.M3U8
-            )
+            newExtractorLink {
+                this.name = this@M3UStreamProvider.name
+                this.source = this@M3UStreamProvider.name
+                this.url = data
+                this.quality = Qualities.Unknown.value
+                this.type = ExtractorLinkType.M3U8
+            }
         )
         return true
     }
