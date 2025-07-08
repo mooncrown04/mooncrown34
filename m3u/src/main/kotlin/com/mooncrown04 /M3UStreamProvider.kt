@@ -1,70 +1,48 @@
 package com.mooncrown04
 
 import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.extractors.*
 import com.lagradost.cloudstream3.utils.*
-import org.jsoup.Jsoup
+import java.net.URI
 
 class M3UStreamProvider : MainAPI() {
-    override var name = "M3U Stream"
-    override var mainUrl = "https://example.com"
+    override var mainUrl = "https://raw.githubusercontent.com/mooncrown04/m3u/refs/heads/main/birlesik.m3u"
+    override var name = "M3U"
     override val supportedTypes = setOf(TvType.Live)
-    override var lang = "tr"
-    override val hasMainPage = true
 
-    private val m3uUrl = "https://raw.githubusercontent.com/mooncrown04/m3u/refs/heads/main/birlesik.m3u"
+    override suspend fun load(apiName: String, dataUrl: String): Boolean {
+        val res = app.get(dataUrl).text
+        val lines = res.split("#EXTINF")
+        for (line in lines.drop(1)) {
+            val url = line.substringAfter("\n").substringBefore("\n").trim()
+            val name = line.substringBefore("\n").substringAfter(",").trim()
 
-    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val content = app.get(m3uUrl).text
-        val channels = parseM3U(content)
-        return newHomePageResponse(
-            listOf(HomePageList("M3U Playlist", channels, isHorizontalImages = true)),
-            hasNext = false
-        )
-    }
+            val logo = Regex("tvg-logo=\"(.*?)\"").find(line)?.groupValues?.getOrNull(1)
+            val group = Regex("group-title=\"(.*?)\"").find(line)?.groupValues?.getOrNull(1)
+            val referer = getRefererFromUrl(url)
 
-    private fun parseM3U(text: String): List<LiveSearchResponse> {
-        val lines = text.split("\n")
-        val result = mutableListOf<LiveSearchResponse>()
-
-        var name: String? = null
-        var logo: String? = null
-        var group: String? = null
-
-        for (i in lines.indices) {
-            val line = lines[i].trim()
-            if (line.startsWith("#EXTINF")) {
-                name = Regex("""tvg-name="([^"]+)"""").find(line)?.groupValues?.getOrNull(1)
-                    ?: line.substringAfter(",").trim()
-                logo = Regex("""tvg-logo="([^"]+)"""").find(line)?.groupValues?.getOrNull(1)
-                group = Regex("""group-title="([^"]+)"""").find(line)?.groupValues?.getOrNull(1)
-            } else if (line.startsWith("http")) {
-                val url = line
-                val finalName = name ?: "No Name"
-                val finalLogo = logo ?: ""
-                val finalGroup = group ?: "M3U"
-
-                result.add(
-                    LiveSearchResponse(
-                        name = finalName,
-                        url = url,
-                        apiName = this.name,
-                        type = TvType.Live,
-                        posterUrl = finalLogo
-                    )
+            callback(
+                LiveSearchResponse(
+                    name = name,
+                    url = fixUrl(url),
+                    apiName = this.name,
+                    type = TvType.Live,
+                    iconUrl = logo,
+                    referer = referer,
+                    quality = getQualityFromName(name),
+                    headers = mapOf("User-Agent" to USER_AGENT)
                 )
-            }
+            )
         }
-
-        return result
+        return true
     }
 
-    override suspend fun load(url: String): LoadResponse {
-        val name = url.substringAfterLast("/").substringBefore(".")
-        return LiveStreamLoadResponse(
-            name = name,
-            url = url,
-            type = TvType.Live
-        )
+    private fun getRefererFromUrl(url: String): String? {
+        return try {
+            URI(url).host?.let { "https://$it" }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     override suspend fun loadLinks(
@@ -73,16 +51,20 @@ class M3UStreamProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        callback.invoke(
-            ExtractorLink(
-                source = this.name,
-                name = this.name,
-                url = data,
-                referer = null,
-                quality = Qualities.Unknown.value,
-                type = ExtractorLinkType.M3U8
-            )
+        callback(
+            newExtractorLink {
+                name = "M3U Link"
+                source = "m3u"
+                url = data
+                isM3u8 = true
+                quality = Qualities.Unknown.value
+                headers = mapOf("User-Agent" to USER_AGENT)
+            }
         )
         return true
+    }
+
+    companion object {
+        const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
     }
 }
