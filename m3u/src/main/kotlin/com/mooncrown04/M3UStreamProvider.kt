@@ -28,7 +28,7 @@ class M3UStreamProvider : MainAPI() {
 
     override suspend fun load(url: String): LoadResponse {
         return newTvSeriesLoadResponse(name = url, url = url, type = TvType.Live) {
-            episodes = listOf(
+            this.episodes = listOf(
                 Episode(
                     data = url,
                     name = "Canlı Yayın"
