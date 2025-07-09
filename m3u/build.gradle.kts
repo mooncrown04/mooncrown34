@@ -1,6 +1,6 @@
 plugins {
-    id("com.android.library")
-    kotlin("jvm") version "1.9.0"
+    kotlin("jvm") version "1.9.10" // örnek versiyon
+    id("com.android.library") apply false
 }
 
 android {
