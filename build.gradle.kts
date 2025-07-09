@@ -65,20 +65,19 @@ subprojects {
         }
     }
 
-    dependencies {
-        val implementation by configurations
-        val cloudstream by configurations
+ dependencies {
+    val implementation by configurations
+    val cloudstream by configurations
 
-        cloudstream("com.lagradost:cloudstream3:pre-release")
-
-        implementation(kotlin("stdlib"))
-        implementation("com.github.Blatzar:NiceHttp:0.4.11")
-        implementation("org.jsoup:jsoup:1.18.3")
-        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.0")
-        implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
-    }
+    cloudstream("com.lagradost:cloudstream3:3.7.0") // net sürüm ya da çalışan snapshot kullan
+    implementation(kotlin("stdlib"))
+    implementation("com.github.Blatzar:NiceHttp:0.4.11")
+    implementation("org.jsoup:jsoup:1.18.3")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+}
 }
 
 task<Delete>("clean") {
