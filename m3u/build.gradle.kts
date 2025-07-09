@@ -1,8 +1,7 @@
 plugins {
-    id("com.android.library") apply false
-    kotlin("jvm") version "X.Y.Z"
+    id("com.android.library")
+    kotlin("jvm") version "1.9.0"
 }
-
 
 android {
     namespace = "com.mooncrown04"
