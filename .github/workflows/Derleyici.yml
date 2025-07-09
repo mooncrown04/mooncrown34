@@ -23,7 +23,6 @@ jobs:
     - name: Build Plugin
       run: |
         rm -rf ~/.gradle/caches/
-        cd $GITHUB_WORKSPACE/src
         chmod +x gradlew
         ./gradlew :m3u:make
         mkdir -p $GITHUB_WORKSPACE/builds
