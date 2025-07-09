@@ -36,16 +36,16 @@ subprojects {
     apply(plugin = "com.lagradost.cloudstream3.gradle")
 
     cloudstream {
-        setRepo(System.getenv("GITHUB_REPOSITORY") ?: "mooncrown04/mooncrown34")
+        setRepo(System.getenv("GITHUB_REPOSITORY") ?: "https://github.com/mooncrown04/mooncrown34")
         authors = listOf("mooncrown04")
     }
 
     android {
         namespace = "com.mooncrown04"
-        compileSdkVersion(34)
-        defaultConfig {
+     defaultConfig {
             minSdk = 21
-            targetSdk = 34
+            compileSdkVersion(35)
+            targetSdk = 35
         }
 
         compileOptions {
@@ -81,6 +81,11 @@ subprojects {
     }
 }
 
-tasks.register<Delete>("clean") {
+task<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
+tasks.register("make") {
+    doLast {
+        println("Custom 'make' task executed")
+    }
