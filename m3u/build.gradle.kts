@@ -1,7 +1,6 @@
 plugins {
-    kotlin("android")
-    id("com.android.library")
-    id("cloudstream")
+    id("com.android.library") apply false
+    kotlin("jvm") version "X.Y.Z"
 }
 
 cloudstream {
