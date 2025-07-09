@@ -1,5 +1,5 @@
 plugins {
-    kotlin("android") version "1.9.23" apply false
-    id("com.android.library") apply false
-    id("cloudstream") version "3.6.4" apply false
+    id("com.android.library") version "8.1.0" apply false
+    kotlin("android") version "1.9.0" apply false
 }
+
