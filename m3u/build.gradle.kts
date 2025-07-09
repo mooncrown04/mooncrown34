@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm")
-    id("com.android.library") apply false
+    id("com.android.library")
+    kotlin("android")
 }
 
 android {
