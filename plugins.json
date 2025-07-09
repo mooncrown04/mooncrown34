@@ -1,15 +1,9 @@
 [
   {
-    "name": "M3UStream",
-    "packageName": "com.mooncrown04",
-    "versionCode": 1,
-    "versionName": "1.0",
-    "apk": "m3u.cs3",
-    "icon": "https://raw.githubusercontent.com/recloudstream/cloudstream/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
-    "repo": "https://github.com/mooncrown04/mooncrown34",
-    "description": "M3U linkleri üzerinden canlı yayın sağlayıcısı.",
-    "authors": ["mooncrown04"],
+    "name": "M3U Stream",
+    "internalName": "m3u",
     "language": "tr",
-    "tvTypes": ["Live"]
+    "version": 1,
+    "url": "https://github.com/mooncrown04/mooncrown34/raw/main/builds/m3u.cs3"
   }
 ]
