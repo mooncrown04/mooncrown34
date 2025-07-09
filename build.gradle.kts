@@ -87,5 +87,6 @@ task<Delete>("clean") {
 
 tasks.register("make") {
     doLast {
-        println("Custom 'make' task executed")
+        println("Custom 'make' task executed") 
+}
     }
