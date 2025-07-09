@@ -1,37 +1,68 @@
-name: Build Plugin
+name: CloudStream Derleyici
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - main
-
+      - master
+    paths-ignore:
+      - "**/*.md"
+      - "**/*.yml"
+      - "**/*.jpg"
+      - "**/*.png"
+      - "**/*.py"
+      - "**/*.m3u"
+      - "**/*.m3u8"
 jobs:
-  build:
+  CloudStreamDerleyici:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup JDK
-        uses: actions/setup-java@v3
+      - name: "'src' Depo Kontrolü"
+        uses: actions/checkout@v4.2.2
         with:
-          distribution: 'temurin'
-          java-version: 17
+          path: "src"
 
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+      - name: "'build' Depo Kontrolü"
+        uses: actions/checkout@v4.2.2
+        with:
+          ref: "builds"
+          path: "builds"
 
-      - name: Build Plugin
-        run: ./gradlew :m3u:assembleRelease
+      - name: Eski Derlemeleri Temizle
+        run: rm -f $GITHUB_WORKSPACE/builds/*.cs3 || true
 
-      - name: Rename & Move .cs3 to builds folder
+      - name: JDK 17 Ayarla
+        uses: actions/setup-java@v4.6.0
+        with:
+          distribution: adopt
+          java-version: '17'
+
+      - name: Android SDK Ayarla
+        uses: android-actions/setup-android@v3.2.2
+
+      - name: Gradle Önbelleğini Temizle
+        run: rm -rf ~/.gradle/caches/
+
+      - name: Eklentileri Derle
         run: |
-          mkdir -p builds
-          cp m3u/build/outputs/aar/*.aar builds/m3u.cs3
+          cd $GITHUB_WORKSPACE/src
+          chmod +x gradlew
+          ./gradlew make makePluginsJson
+          cp */build/*.cs3 $GITHUB_WORKSPACE/builds || true
+          cp build/plugins.json $GITHUB_WORKSPACE/builds || true
 
-      - name: Upload .cs3 as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: m3u.cs3
-          path: builds/m3u.cs3
+      - name: Derlemeleri Yükle
+        run: |
+          cd $GITHUB_WORKSPACE/builds
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add .
+          git commit -m "$GITHUB_SHA::7 'nın Derlenmesi" || echo "Nothing to commit"
+          git push --set-upstream origin builds --force
