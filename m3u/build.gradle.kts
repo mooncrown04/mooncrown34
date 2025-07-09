@@ -3,11 +3,6 @@ plugins {
     kotlin("jvm") version "X.Y.Z"
 }
 
-cloudstream {
-    language.set("tr")
-    description.set("M3U Yayınları için canlı yayın sağlayıcısı")
-    authors.set(listOf("mooncrown04"))
-}
 
 android {
     namespace = "com.mooncrown04"
