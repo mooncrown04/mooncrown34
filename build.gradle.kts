@@ -1,6 +1,15 @@
 plugins {
-    id("com.android.library") version "8.2.0" apply false
-    kotlin("android") version "1.9.10" apply false
-    id("cloudstream") version "1.0.0" apply false
+    id("com.android.library") version "8.0.2" apply false
+    kotlin("android") version "1.8.20" apply false
+    id("cloudstream") apply false
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+        maven { url = uri("https://repo.recloudstream.com/releases") }
+    }
 }
 
