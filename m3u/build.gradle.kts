@@ -1,5 +1,5 @@
 plugins {
-    kotlin("android")
+    id("org.jetbrains.kotlin.android")
     id("com.android.library")
     id("cloudstream")
 }
@@ -25,5 +25,5 @@ android {
 }
 
 dependencies {
-    // Gerekirse özel kütüphaneler eklenebilir
+    // Cloudstream veya diğer eklenti bağımlılıkları buraya eklenebilir
 }
