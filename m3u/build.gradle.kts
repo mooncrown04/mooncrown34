@@ -1,7 +1,7 @@
 plugins {
-    id("com.android.library") version "8.2.2"
-    kotlin("android") version "1.9.23"
-    id("cloudstream") version "1.0.0"
+    kotlin("android")
+    id("com.android.library")
+    id("cloudstream")
 }
 
 cloudstream {
@@ -16,22 +16,14 @@ android {
 
     defaultConfig {
         minSdk = 21
-        targetSdk = 34
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
-    kotlinOptions {
-        jvmTarget = "11"
-    }
 }
 
-repositories {
-    google()
-    mavenCentral()
-    maven("https://jitpack.io")
-    maven("https://repo.recloudstream.com/releases")
+dependencies {
+    // Gerekirse özel kütüphaneler eklenebilir
 }
