@@ -4,6 +4,7 @@ pluginManagement {
         google()
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
+        maven { url = uri("https://repo.recloudstream.com/releases") } // <-- Bunu ekle
     }
 }
 
