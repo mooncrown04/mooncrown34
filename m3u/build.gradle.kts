@@ -1,8 +1,21 @@
 plugins {
-    id("org.jetbrains.kotlin.android")
     id("com.android.library")
-    id("cloudstream")
+    kotlin("android")
 }
+
+buildscript {
+    repositories {
+        maven("https://repo.recloudstream.com/releases")
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("com.lagradost:cloudstream:1.0.0")
+    }
+}
+
+apply(plugin = "cloudstream")
 
 cloudstream {
     language.set("tr")
@@ -25,5 +38,5 @@ android {
 }
 
 dependencies {
-    // Cloudstream veya diğer eklenti bağımlılıkları buraya eklenebilir
+    // Ekstra bağımlılık gerekiyorsa buraya
 }
