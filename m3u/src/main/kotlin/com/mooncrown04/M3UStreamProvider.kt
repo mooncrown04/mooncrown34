@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class M3UStreamProvider : MainAPI() {
-    override var mainUrl = "https://raw.githubusercontent.com/mooncrown04/m3u/refs/heads/main/birlesik.m3u" // kendi linkinle değiştir
+    override var mainUrl = "https://raw.githubusercontent.com/Zerk1903/zerkfilm/refs/heads/main/Filmler.m3u" // kendi linkinle değiştir
     override var name = "M3U Stream"
     override val hasMainPage = false
     override val supportedTypes = setOf(TvType.Live)
