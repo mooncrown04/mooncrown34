@@ -1,42 +1,18 @@
-plugins {
-    id("com.android.library")
-    kotlin("android")
-}
-
-buildscript {
-    repositories {
-        maven("https://repo.recloudstream.com/releases")
-        google()
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath("com.lagradost:cloudstream:1.0.0")
-    }
-}
-
-apply(plugin = "cloudstream")
+version = 6
 
 cloudstream {
-    language.set("tr")
-    description.set("M3U Yayınları için canlı yayın sağlayıcısı")
-    authors.set(listOf("mooncrown04"))
-}
+    authors     = listOf("mooncrown04")
+    language    = "tr"
+    description = "(BeIN Sport, Tivibu Spor ve Smart Spor için VPN Gerekebilir.) NeonSpor eklentisini de BeIN Sport, Tabii Spor, Tivibu Spor, Smart Spor, S Sport ve Diğer kanallar mevcuttur."
 
-android {
-    namespace = "com.mooncrown04"
-    compileSdk = 34
-
-    defaultConfig {
-        minSdk = 21
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-}
-
-dependencies {
-    // Ekstra bağımlılık gerekiyorsa buraya
+    /**
+     * Status int as the following:
+     * 0: Down
+     * 1: Ok
+     * 2: Slow
+     * 3: Beta only
+    **/
+    status  = 1 // will be 3 if unspecified
+    tvTypes = listOf("Live")
+    iconUrl = "https://www.google.com/s2/favicons?domain=colorhunt.co&sz=%size%"
 }
