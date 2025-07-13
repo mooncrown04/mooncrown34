@@ -1,5 +1,5 @@
 
-name: Build Plugin
+name: Build cloud
 
 on:
   push:
