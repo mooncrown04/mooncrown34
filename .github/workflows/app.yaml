@@ -1,4 +1,5 @@
-# .github/workflows/app.yaml dosyanızın doğru içeriği
+# .github/workflows/app.yaml dosyanızın DOĞRU içeriği
+
 name: Python M3U Generator CI/CD
 
 # Hangi olaylarda çalışacağını tanımla
@@ -10,38 +11,39 @@ on:
 
 # İŞLER (JOBS) başlar - Gerekli anahtar
 jobs:
-  build: # İşin adı (isteğe bağlı)
+  build_and_deploy: # İşin adı
     runs-on: ubuntu-latest # İşin çalışacağı işletim sistemi
 
     steps:
     # 1. Kodları çek
-    - name: Kodu Çek 📦
+    - name: Kodu Çek (Checkout) 📦
       uses: actions/checkout@v4 
 
     # 2. Python Ortamını Kur
     - name: Python Kurulumu 🐍
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10' 
+        python-version: '3.10' # Kullanmak istediğiniz Python versiyonu
 
-    # 3. Bağımlılıkları Yükle
+    # 3. Bağımlılıkları Yükle (requirements.txt dosyası gereklidir)
     - name: Bağımlılıkları Yükle (Flask, requests) 🛠️
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt # requirements.txt dosyanız olmalı
+        pip install -r requirements.txt 
 
-    # 4. Dağıtım Adımı (Deployment)
-    # Bu adım, kodunuzu sunucunuzda (VSP/DigitalOcean/özel sunucu) çalıştırmalıdır.
-    # Örnekte, dosyaları SCP/SSH ile sunucuya kopyalayarak otomatik dağıtım yapıyoruz.
-    - name: Sunucuya Dağıtma (Örnek) 🚀
-      uses: appleboy/ssh-action@master # Bu, SSH üzerinden dosya kopyalamak için popüler bir 'action'dır.
+    # 4. Dağıtım Adımı (Deployment) - Bu adım, sizin özel sunucunuzla senkronizasyon sağlar.
+    # Bu adımı kullanabilmek için GitHub > Settings > Secrets bölümüne SSH bilgilerinizi (SSH_HOST, SSH_USERNAME, SSH_PRIVATE_KEY) eklemelisiniz.
+    - name: Sunucuya Dağıtma (Otomatik SSH/Git Pull) 🚀
+      uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.SSH_HOST }}        # Gizli anahtar olarak tanımlanan sunucu adresi
-        username: ${{ secrets.SSH_USERNAME }}  # Gizli anahtar olarak tanımlanan kullanıcı adı
-        key: ${{ secrets.SSH_PRIVATE_KEY }}   # Gizli anahtar olarak tanımlanan SSH anahtarı
-        # Python projenizin olduğu klasöre kopyalama işlemi
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          cd /var/www/html/iptv_m3u_api # Sizin sunucunuzdaki klasör yolu
-          git pull origin main # En güncel kodu sunucuda çek
-          # Uygulamayı yeniden başlatma komutu (Gerekliyse: gunicorn, systemctl restart, vb.)
-          # service m3u_service restart
+          # Sunucudaki projenizin olduğu klasöre git
+          cd /var/www/html/iptv_m3u_api 
+          # GitHub'daki en güncel kodu sunucuda çek
+          git pull origin main 
+          # Uygulamayı yeniden başlatma komutu (gunicorn'ı veya Python servisini yeniden başlatır)
+          # Örnek: sudo systemctl restart gunicorn_m3u_service
+          echo "Deployment tamamlandı. Servis yeniden başlatılıyor..."
