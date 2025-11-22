@@ -1,0 +1,40 @@
+name: Python Flask M3U Deployment
+
+on:
+  push:
+    branches: [ main ] # Sadece 'main' dalına push yapıldığında çalıştır
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # İşletim sistemi seçimi
+
+    steps:
+    - name: Checkout Code 📦
+      uses: actions/checkout@v4 # Kodu GitHub'dan çek
+
+    - name: Set up Python 🐍
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10' # Kullanmak istediğiniz Python versiyonu
+
+    - name: Install dependencies 🛠️
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt # requirements.txt dosyanızdaki tüm bağımlılıkları (flask, requests) yükler
+
+    # İsteğe Bağlı: Testleri Çalıştır
+    - name: Run Tests (optional) 🧪
+      run: |
+        # Eğer testleriniz varsa buraya ekleyin (örneğin: pytest)
+        echo "Tests passed."
+
+    # Dağıtım (Deployment) Adımı:
+    # Bu adım, kodu Heroku, DigitalOcean gibi PaaS ortamlarına taşımak için kullanılır.
+    # Bu kısmı, hosting seçiminize göre özelleştirmeniz gerekir.
+    - name: Deploy to Hosting 🌐
+      # Örnek: Kodu SSH veya özel bir token kullanarak sunucuya dağıtma
+      run: |
+        # Bu kısım manuel dağıtım yerine otomatik git push veya rsync komutlarını içerir
+        echo "Deployment step is completed."
