@@ -9,9 +9,9 @@ header('Content-Disposition: attachment; filename="playlist.m3u"');
 // -----------------------------------------------------------
 
 // Lütfen bu kısımları kendi bilgilerinizle değiştirin.
-$host = "https://ornek.paneladresi.com"; // Başında http:// veya https:// olmalı
-$username = "KULLANICI_ADINIZ";
-$password = "SIFRENIZ";
+$host = "https://goldvod.org"; // Başında http:// veya https:// olmalı
+$username = "hpgdisco";
+$password = "123456";
 
 // API uç noktası ve kimlik doğrulama linkleri
 $api_link = $host . "/player_api.php?username=" . $username . "&password=" . $password;
