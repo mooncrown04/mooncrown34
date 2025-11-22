@@ -1,0 +1,15 @@
+# DigitalOcean App Platform için yapılandırma dosyası
+name: python-m3u-generator
+region: ams # Uygulamanın barınacağı bölge
+
+services:
+- name: m3u-service
+  # Kök dizininizdeki ana Python dosyasını çalıştırma komutu
+  run_command: gunicorn --bind 0.0.0.0:$PORT wsgi:app
+  # gunicorn: Python web sunucusu (prod ortamı için gereklidir)
+  # wsgi:app: Ana Flask uygulamasının bulunduğu dosya/değişken
+  # Eğer ana dosyanızın adı 'app.py' ise ve Flask nesnesi 'app' olarak tanımlıysa: gunicorn --bind 0.0.0.0:$PORT app:app
+
+  instance_count: 1
+  instance_size: basic
+  # Otomatik olarak HTTPS ayarlarını yapar
