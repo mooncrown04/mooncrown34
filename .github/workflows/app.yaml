@@ -1,15 +1,47 @@
-# DigitalOcean App Platform için yapılandırma dosyası
-name: python-m3u-generator
-region: ams # Uygulamanın barınacağı bölge
+# .github/workflows/app.yaml dosyanızın doğru içeriği
+name: Python M3U Generator CI/CD
 
-services:
-- name: m3u-service
-  # Kök dizininizdeki ana Python dosyasını çalıştırma komutu
-  run_command: gunicorn --bind 0.0.0.0:$PORT wsgi:app
-  # gunicorn: Python web sunucusu (prod ortamı için gereklidir)
-  # wsgi:app: Ana Flask uygulamasının bulunduğu dosya/değişken
-  # Eğer ana dosyanızın adı 'app.py' ise ve Flask nesnesi 'app' olarak tanımlıysa: gunicorn --bind 0.0.0.0:$PORT app:app
+# Hangi olaylarda çalışacağını tanımla
+on:
+  push:
+    branches: [ main ] # Sadece 'main' dalına yapılan push işlemlerinde çalışır
+  pull_request:
+    branches: [ main ]
 
-  instance_count: 1
-  instance_size: basic
-  # Otomatik olarak HTTPS ayarlarını yapar
+# İŞLER (JOBS) başlar - Gerekli anahtar
+jobs:
+  build: # İşin adı (isteğe bağlı)
+    runs-on: ubuntu-latest # İşin çalışacağı işletim sistemi
+
+    steps:
+    # 1. Kodları çek
+    - name: Kodu Çek 📦
+      uses: actions/checkout@v4 
+
+    # 2. Python Ortamını Kur
+    - name: Python Kurulumu 🐍
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10' 
+
+    # 3. Bağımlılıkları Yükle
+    - name: Bağımlılıkları Yükle (Flask, requests) 🛠️
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt # requirements.txt dosyanız olmalı
+
+    # 4. Dağıtım Adımı (Deployment)
+    # Bu adım, kodunuzu sunucunuzda (VSP/DigitalOcean/özel sunucu) çalıştırmalıdır.
+    # Örnekte, dosyaları SCP/SSH ile sunucuya kopyalayarak otomatik dağıtım yapıyoruz.
+    - name: Sunucuya Dağıtma (Örnek) 🚀
+      uses: appleboy/ssh-action@master # Bu, SSH üzerinden dosya kopyalamak için popüler bir 'action'dır.
+      with:
+        host: ${{ secrets.SSH_HOST }}        # Gizli anahtar olarak tanımlanan sunucu adresi
+        username: ${{ secrets.SSH_USERNAME }}  # Gizli anahtar olarak tanımlanan kullanıcı adı
+        key: ${{ secrets.SSH_PRIVATE_KEY }}   # Gizli anahtar olarak tanımlanan SSH anahtarı
+        # Python projenizin olduğu klasöre kopyalama işlemi
+        script: |
+          cd /var/www/html/iptv_m3u_api # Sizin sunucunuzdaki klasör yolu
+          git pull origin main # En güncel kodu sunucuda çek
+          # Uygulamayı yeniden başlatma komutu (Gerekliyse: gunicorn, systemctl restart, vb.)
+          # service m3u_service restart
