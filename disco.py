@@ -1,131 +1,154 @@
-from flask import Flask, Response
+from flask import Flask, Response, request
 import requests
 import json
 import urllib3
+import os
 
 app = Flask(__name__)
 
-# -- PANEL BİLGİLERİ --
-HOST = "https://ornek.paneladresi.com"
-USERNAME = "KULLANICI_ADINIZ"
-PASSWORD = "SIFRENIZ"
+# -- KONFİGÜRASYON --
+# Panel bilgilerini buraya yaz veya çevre değişkenlerinden oku
+HOST = os.getenv("XTREAM_HOST", "https://ornek.paneladresi.com")
+USERNAME = os.getenv("XTREAM_USER", "KULLANICI_ADINIZ")
+PASSWORD = os.getenv("XTREAM_PASS", "SIFRENIZ")
+
+API_BASE = f"{HOST.rstrip('/')}/player_api.php"
 
 # Güvenlik / istek ayarları
-VERIFY_SSL = True  # Eğer self-signed sertifika kullanıyorsan False yapabilirsin, ancak güvenlik riski vardır.
-REQUEST_TIMEOUT = 10  # saniye
+VERIFY_SSL = os.getenv("VERIFY_SSL", "true").lower() in ("1", "true", "yes")
+REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "10"))
 
 if not VERIFY_SSL:
-    # verify=False kullanıyorsan InsecureRequestWarning'ı kapat
+    # self-signed veya test ortamı için, üretimde kullanmayın
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-API_BASE = f"{HOST}/player_api.php"
-
-# -- HTTP BAŞLIKLARI --
-API_HEADERS = {
+HEADERS = {
     'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 9; SmartBox Build/PI)',
     'Accept': 'application/json',
-    'Referer': f'{HOST}/',
+    'Referer': f'{HOST.rstrip("/")}/',
 }
 
 
-def _safe_json_resp(r):
-    """HTTP durumunu kontrol et ve JSON parse et; hata mesajı döndür."""
-    if r.status_code != 200:
-        return None, f"HTTP error: {r.status_code}"
+def safe_get_json(params):
+    """Requests GET, kontrol ve JSON parse. Döner: (obj, error_str_or_None)."""
     try:
-        return r.json(), None
-    except json.JSONDecodeError:
-        return None, "JSON decode error"
-
-
-def get_streams():
-    """Tüm canlı akışları ve kategorileri çek.
-    Döner: (categories_list, streams_list, error_message_or_None)
-    """
-    # 1. Kategorileri Çekme
-    params_cat = {
-        'username': USERNAME,
-        'password': PASSWORD,
-        'action': 'get_live_categories'
-    }
-    try:
-        r_cat = requests.get(API_BASE, params=params_cat, headers=API_HEADERS, timeout=REQUEST_TIMEOUT, verify=VERIFY_SSL)
+        r = requests.get(API_BASE, params=params, headers=HEADERS, timeout=REQUEST_TIMEOUT, verify=VERIFY_SSL)
     except requests.RequestException as e:
-        return None, None, f"Kategori isteği başarısız: {e}"
+        return None, f"Istek hatası: {e}"
 
-    categories, err = _safe_json_resp(r_cat)
+    if r.status_code != 200:
+        return None, f"HTTP {r.status_code}: {r.text[:500]}"
+
+    try:
+        data = r.json()
+    except json.JSONDecodeError:
+        return None, "JSON parse hatası"
+
+    return data, None
+
+
+def get_categories_and_streams(username=USERNAME, password=PASSWORD):
+    """Player API'den kategoriler ve kanalları çek.
+    Döner: (categories_list, streams_list, error_or_None)
+    """
+    params_cat = {'username': username, 'password': password, 'action': 'get_live_categories'}
+    categories, err = safe_get_json(params_cat)
     if err:
         return None, None, f"Kategori hatası: {err}"
 
-    # 2. Kanalları Çekme
-    params_stream = {
-        'username': USERNAME,
-        'password': PASSWORD,
-        'action': 'get_live_streams'
-    }
-    try:
-        r_stream = requests.get(API_BASE, params=params_stream, headers=API_HEADERS, timeout=REQUEST_TIMEOUT, verify=VERIFY_SSL)
-    except requests.RequestException as e:
-        return None, None, f"Kanal isteği başarısız: {e}"
-
-    streams, err = _safe_json_resp(r_stream)
+    params_streams = {'username': username, 'password': password, 'action': 'get_live_streams'}
+    streams, err = safe_get_json(params_streams)
     if err:
         return None, None, f"Kanal hatası: {err}"
 
-    # Beklenen format liste olduğu için kontrol (bazı paneller dict içinde 'categories' vb dönebilir)
-    if isinstance(categories, dict) and 'categories' in categories:
-        categories = categories['categories']
-    if isinstance(streams, dict) and 'live_streams' in streams:
-        streams = streams['live_streams']
+    # Bazı panel sürümleri dict içinde liste dönebilir; normalize et
+    if isinstance(categories, dict):
+        if 'categories' in categories and isinstance(categories['categories'], list):
+            categories = categories['categories']
+        else:
+            # Eğer dict, ama gerçek liste değilse, hata ver
+            return None, None, "Beklenmeyen kategori formatı"
+
+    if isinstance(streams, dict):
+        # Xtream türevleri bazen key 'live_streams' veya 'streams' kullanır
+        if 'live_streams' in streams and isinstance(streams['live_streams'], list):
+            streams = streams['live_streams']
+        elif 'streams' in streams and isinstance(streams['streams'], list):
+            streams = streams['streams']
+        else:
+            return None, None, "Beklenmeyen kanal formatı"
 
     if not isinstance(categories, list) or not isinstance(streams, list):
-        return None, None, "Beklenmeyen API formatı"
+        return None, None, "Beklenmeyen API formatı (liste bekleniyor)"
 
     return categories, streams, None
 
 
+def escape_attr(s: str) -> str:
+    """Basit attribute kaçış: çift tırnakları ters bölü ile kaçır."""
+    if not isinstance(s, str):
+        return ""
+    return s.replace('"', '\\"')
+
+
 @app.route('/m3u-dynamic')
-def generate_m3u():
-    categories, streams, error = get_streams()
+def m3u_dynamic():
+    """
+    Dinamik M3U oluşturur. Opsiyonel query parametreleri:
+    - user : kullanıcı adı (opsiyonel; varsayılan USERNAME)
+    - pass : parola (opsiyonel; varsayılan PASSWORD)
+    """
+    user = request.args.get('user', USERNAME)
+    pwd = request.args.get('pass', PASSWORD)
 
+    categories, streams, error = get_categories_and_streams(username=user, password=pwd)
     if error:
-        return Response(error, mimetype='text/plain', status=500)
+        return Response(error + "\n", mimetype='text/plain', status=500)
 
-    # Kategori ID'den isme eşleştirme (türleri normalize et)
+    # category_id -> category_name map (türleri normalize ederek)
     category_map = {}
     for c in categories:
-        cid = str(c.get('category_id', ''))
-        cname = c.get('category_name', 'Diğer')
+        cid = str(c.get('category_id', '')).strip()
+        cname = c.get('category_name') or c.get('local_name') or 'Diğer'
         category_map[cid] = cname
 
-    m3u_lines = ["#EXTM3U"]
+    lines = ["#EXTM3U"]
 
-    for stream in streams:
-        stream_id = stream.get('stream_id')
-        name = stream.get('name') or f"channel_{stream_id}"
-        icon = stream.get('stream_icon', '') or ''
-        category_id = str(stream.get('category_id', ''))
-        category_name = category_map.get(category_id, 'Diğer')
-        container = stream.get('container_extension') or 'ts'
+    for s in streams:
+        stream_id = s.get('stream_id') or s.get('stream_id')
+        if stream_id is None:
+            # atla, id yok
+            continue
 
-        # Basit kaçış: double-quote'ları bozmayalım
-        name_esc = name.replace('"', '\\"')
-        icon_esc = icon.replace('"', '\\"')
+        name = s.get('name') or s.get('stream_name') or f"channel_{stream_id}"
+        icon = s.get('stream_icon') or s.get('tv_logo') or ""
+        cat_id = str(s.get('category_id') or s.get('category') or "").strip()
+        group = category_map.get(cat_id, 'Diğer')
+        container = s.get('container_extension') or s.get('container') or 'ts'
 
-        stream_url = f"{HOST}/live/{USERNAME}/{PASSWORD}/{stream_id}.{container}"
+        # Bazı kanallar zaten tam stream_url içerir; varsa kullan
+        candidate_stream_url = (s.get('stream_url') or s.get('stream_direct') or "").strip()
+        if candidate_stream_url:
+            stream_url = candidate_stream_url
+        else:
+            # Default Xtream format
+            stream_url = f"{HOST.rstrip('/')}/live/{user}/{pwd}/{stream_id}.{container}"
 
-        m3u_lines.append(f'#EXTINF:-1 tvg-id="{stream_id}" tvg-name="{name_esc}" tvg-logo="{icon_esc}" group-title="{category_name}",{name_esc}')
-        m3u_lines.append(stream_url)
+        name_esc = escape_attr(name)
+        icon_esc = escape_attr(icon)
+        group_esc = escape_attr(group)
 
-    m3u_content = "\n".join(m3u_lines) + "\n"
+        extinf = f'#EXTINF:-1 tvg-id="{stream_id}" tvg-name="{name_esc}" tvg-logo="{icon_esc}" group-title="{group_esc}",{name}'
+        lines.append(extinf)
+        lines.append(stream_url)
 
-    return Response(
-        m3u_content,
-        mimetype='application/x-mpegurl; charset=utf-8',
-        headers={"Content-Disposition": "attachment; filename=playlist.m3u"}
-    )
+    m3u_text = "\n".join(lines) + "\n"
+    headers = {
+        "Content-Disposition": "attachment; filename=playlist.m3u"
+    }
+    return Response(m3u_text, mimetype='application/x-mpegurl; charset=utf-8', headers=headers)
 
 
-if __name__ == '__main__':
-    # Production'da gunicorn/uWSGI kullan; development için:
-    app.run(host='0.0.0.0', port=5000, debug=False)
+if __name__ == "__main__":
+    # Development server. Production'da gunicorn/uWSGI kullanın.
+    app.run(host="0.0.0.0", port=5000, debug=False)
